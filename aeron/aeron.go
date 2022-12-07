@@ -36,10 +36,10 @@ type NewPublicationHandler func(string, int32, int32, int64)
 type NewSubscriptionHandler func(string, int32, int64)
 
 // AvailableImageHandler is the handler type for image available notification from the media driver
-type AvailableImageHandler func(*Image)
+type AvailableImageHandler func(Image)
 
 // UnavailableImageHandler is the handler type for image unavailable notification from the media driver
-type UnavailableImageHandler func(*Image)
+type UnavailableImageHandler func(Image)
 
 // Aeron is the primary interface to the media driver for managing subscriptions and publications
 type Aeron struct {
@@ -74,7 +74,10 @@ func Connect(ctx *Context) (*Aeron, error) {
 
 	aeron.driverProxy.Init(&aeron.toDriverRingBuffer)
 
-	aeron.toClientsBroadcastReceiver = broadcast.NewReceiver(aeron.counters.ToClientsBuf.Get())
+	aeron.toClientsBroadcastReceiver, err = broadcast.NewReceiver(aeron.counters.ToClientsBuf.Get())
+	if err != nil {
+		return nil, err
+	}
 
 	aeron.toClientsCopyReceiver = broadcast.NewCopyReceiver(aeron.toClientsBroadcastReceiver)
 
@@ -110,22 +113,85 @@ func (aeron *Aeron) Close() error {
 	return err
 }
 
-// AddSubscription will add a new subscription to the driver.
-// Returns a channel, which can be used for either blocking or non-blocking want for media driver confirmation
-func (aeron *Aeron) AddSubscription(channel string, streamID int32) chan *Subscription {
-	ch := make(chan *Subscription, 1)
-
-	regID := aeron.conductor.AddSubscription(channel, streamID)
-	go func() {
-		subscription := aeron.conductor.FindSubscription(regID)
-		for subscription == nil {
-			subscription = aeron.conductor.FindSubscription(regID)
-			if subscription == nil {
-				aeron.context.idleStrategy.Idle(0)
-			}
+// AddSubscription will add a new subscription to the driver and wait until it is ready.
+func (aeron *Aeron) AddSubscription(channel string, streamID int32) (*Subscription, error) {
+	registrationID, err := aeron.conductor.AddSubscription(channel, streamID)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		subscription, err := aeron.conductor.FindSubscription(registrationID)
+		if subscription != nil || err != nil {
+			return subscription, err
 		}
-		ch <- subscription
-		close(ch)
+		aeron.context.idleStrategy.Idle(0)
+	}
+}
+
+// AddSubscriptionDeprecated will add a new subscription to the driver.
+// Returns a channel, which can be used for either blocking or non-blocking want for media driver confirmation
+func (aeron *Aeron) AddSubscriptionDeprecated(channel string, streamID int32) chan *Subscription {
+	ch := make(chan *Subscription, 1)
+	registrationID, err := aeron.conductor.AddSubscription(channel, streamID)
+	if err != nil {
+		// Preserve the legacy functionality.  The original AddSubscription would result in the ClientConductor calling
+		// onError on this, as well as subsequently from the FindSubscription call below.
+		aeron.conductor.onError(err)
+	}
+	go func() {
+		for {
+			subscription, err := aeron.conductor.FindSubscription(registrationID)
+			if subscription != nil || err != nil {
+				if err != nil {
+					aeron.conductor.onError(err)
+				}
+				ch <- subscription
+				close(ch)
+				return
+			}
+			aeron.context.idleStrategy.Idle(0)
+		}
+	}()
+	return ch
+}
+
+// AsyncAddSubscription will add a new subscription to the driver and return its registration ID.  That ID can be used
+// to get the Subscription with GetSubscription().
+func (aeron *Aeron) AsyncAddSubscription(channel string, streamID int32) (int64, error) {
+	return aeron.conductor.AddSubscription(channel, streamID)
+}
+
+// GetSubscription will attempt to get a Subscription from a registrationID.  See AsyncAddSubscription.  A pending
+// Subscription will return nil,nil signifying that there is neither a Subscription nor an error.
+func (aeron *Aeron) GetSubscription(registrationID int64) (*Subscription, error) {
+	return aeron.conductor.FindSubscription(registrationID)
+}
+
+// AddPublicationDeprecated will add a new publication to the driver. If such publication already exists within ClientConductor
+// the same instance will be returned.
+// Returns a channel, which can be used for either blocking or non-blocking want for media driver confirmation
+func (aeron *Aeron) AddPublicationDeprecated(channel string, streamID int32) chan *Publication {
+	ch := make(chan *Publication, 1)
+
+	registrationID, err := aeron.conductor.AddPublication(channel, streamID)
+	if err != nil {
+		// Preserve the legacy functionality.  The original AddPublication would result in the ClientConductor calling
+		// onError on this, as well as subsequently from the FindPublication call below.
+		aeron.conductor.onError(err)
+	}
+	go func() {
+		for {
+			publication, err := aeron.conductor.FindPublication(registrationID)
+			if publication != nil || err != nil {
+				if err != nil {
+					aeron.conductor.onError(err)
+				}
+				ch <- publication
+				close(ch)
+				return
+			}
+			aeron.context.idleStrategy.Idle(0)
+		}
 	}()
 
 	return ch
@@ -133,46 +199,91 @@ func (aeron *Aeron) AddSubscription(channel string, streamID int32) chan *Subscr
 
 // AddPublication will add a new publication to the driver. If such publication already exists within ClientConductor
 // the same instance will be returned.
+func (aeron *Aeron) AddPublication(channel string, streamID int32) (*Publication, error) {
+	registrationID, err := aeron.conductor.AddPublication(channel, streamID)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		publication, err := aeron.conductor.FindPublication(registrationID)
+		if publication != nil || err != nil {
+			return publication, err
+		}
+		aeron.context.idleStrategy.Idle(0)
+	}
+}
+
+// AsyncAddPublication will add a new publication to the driver and return its registration ID.  That ID can be used to
+// get the added Publication with GetPublication().
+func (aeron *Aeron) AsyncAddPublication(channel string, streamID int32) (int64, error) {
+	return aeron.conductor.AddPublication(channel, streamID)
+}
+
+// GetPublication will attempt to get a Publication from a registrationID.  See AsyncAddPublication.  A pending
+// Publication will return nil,nil signifying that there is neither a Publication nor an error.
+func (aeron *Aeron) GetPublication(registrationID int64) (*Publication, error) {
+	return aeron.conductor.FindPublication(registrationID)
+}
+
+// AddExclusivePublication will add a new exclusive publication to the driver. If such publication already
+// exists within ClientConductor the same instance will be returned.
+func (aeron *Aeron) AddExclusivePublication(channel string, streamID int32) (*Publication, error) {
+	registrationID, err := aeron.conductor.AddExclusivePublication(channel, streamID)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		publication, err := aeron.conductor.FindPublication(registrationID)
+		if publication != nil || err != nil {
+			return publication, err
+		}
+		aeron.context.idleStrategy.Idle(0)
+	}
+}
+
+// AddExclusivePublicationDeprecated will add a new exclusive publication to the driver. If such publication already
+// exists within ClientConductor the same instance will be returned.
 // Returns a channel, which can be used for either blocking or non-blocking want for media driver confirmation
-func (aeron *Aeron) AddPublication(channel string, streamID int32) chan *Publication {
+func (aeron *Aeron) AddExclusivePublicationDeprecated(channel string, streamID int32) chan *Publication {
 	ch := make(chan *Publication, 1)
 
-	regID := aeron.conductor.AddPublication(channel, streamID)
+	registrationID, err := aeron.conductor.AddExclusivePublication(channel, streamID)
+	if err != nil {
+		// Preserve the legacy functionality.  The original AddExclusivePublication would result in the ClientConductor
+		// calling onError on this, as well as subsequently from the FindPublication call below.
+		aeron.conductor.onError(err)
+	}
 	go func() {
-		publication := aeron.conductor.FindPublication(regID)
-		for publication == nil {
-			publication = aeron.conductor.FindPublication(regID)
-			if publication == nil {
-				aeron.context.idleStrategy.Idle(0)
+		for {
+			publication, err := aeron.conductor.FindPublication(registrationID)
+			if publication != nil || err != nil {
+				if err != nil {
+					aeron.conductor.onError(err)
+				}
+				ch <- publication
+				close(ch)
+				return
 			}
+			aeron.context.idleStrategy.Idle(0)
 		}
-		ch <- publication
-		close(ch)
 	}()
 
 	return ch
 }
 
-// AddExclusivePublication will add a new exclusive publication to the driver. If such publication already
-// exists within ClientConductor the same instance will be returned.
-// Returns a channel, which can be used for either blocking or non-blocking want for media driver confirmation
-func (aeron *Aeron) AddExclusivePublication(channel string, streamID int32) chan *Publication {
-	ch := make(chan *Publication, 1)
+// AsyncAddExclusivePublication will add a new exclusive publication to the driver and return its registration ID.  That
+// ID can be used to get the added exclusive Publication with GetExclusivePublication().
+func (aeron *Aeron) AsyncAddExclusivePublication(channel string, streamID int32) (int64, error) {
+	return aeron.conductor.AddExclusivePublication(channel, streamID)
+}
 
-	regID := aeron.conductor.AddExclusivePublication(channel, streamID)
-	go func() {
-		publication := aeron.conductor.FindPublication(regID)
-		for publication == nil {
-			publication = aeron.conductor.FindPublication(regID)
-			if publication == nil {
-				aeron.context.idleStrategy.Idle(0)
-			}
-		}
-		ch <- publication
-		close(ch)
-	}()
-
-	return ch
+// GetExclusivePublication will attempt to get an exclusive Publication from a registrationID.  See
+// AsyncAddExclusivePublication.  A pending Publication will return nil,nil signifying that there is neither a
+// Publication nor an error.
+// Also note that while aeron-go currently handles GetPublication and GetExclusivePublication the same way, they may
+// diverge in the future.  Other Aeron languages already handle these calls differently.
+func (aeron *Aeron) GetExclusivePublication(registrationID int64) (*Publication, error) {
+	return aeron.conductor.FindPublication(registrationID)
 }
 
 // NextCorrelationID generates the next correlation id that is unique for the connected Media Driver.

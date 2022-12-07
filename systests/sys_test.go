@@ -1,5 +1,6 @@
 /*
 Copyright 2016 Stanislav Liberman
+Copyright 2022 Steven Stern
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,11 +15,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package systests
 
 import (
 	"flag"
 	"fmt"
+	"github.com/lirm/aeron-go/systests/driver"
+	"github.com/stretchr/testify/suite"
+	"testing"
 	"time"
 
 	"github.com/lirm/aeron-go/aeron"
@@ -39,7 +43,22 @@ var ExamplesConfig = struct {
 
 var logger = logging.MustGetLogger("systests")
 
-func send(n int, pub *aeron.Publication) {
+type SysTestSuite struct {
+	suite.Suite
+	mediaDriver *driver.MediaDriver
+}
+
+func (suite *SysTestSuite) SetupSuite() {
+	mediaDriver, err := driver.StartMediaDriver()
+	suite.Require().NoError(err, "Couldn't start Media Driver: ")
+	suite.mediaDriver = mediaDriver
+}
+
+func (suite *SysTestSuite) TearDownSuite() {
+	suite.mediaDriver.StopMediaDriver()
+}
+
+func (suite *SysTestSuite) send(n int, pub *aeron.Publication) {
 	message := "this is a message"
 	srcBuffer := atomic.MakeBuffer(([]byte)(message))
 
@@ -49,46 +68,42 @@ func send(n int, pub *aeron.Publication) {
 		for v <= 0 {
 			v = pub.Offer(srcBuffer, 0, int32(len(message)), nil)
 			if time.Now().After(timeoutAt) {
-				logger.Fatalf("Timed out at %v", time.Now())
+				suite.Fail("Send timed out")
 			}
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond)
 		}
 	}
 }
 
-func receive(n int, sub *aeron.Subscription) {
+func (suite *SysTestSuite) receive(n int, sub *aeron.Subscription) {
 	counter := 0
 	handler := func(buffer *atomic.Buffer, offset int32, length int32, header *logbuffer.Header) {
 		logger.Debugf("    message: %s", string(buffer.GetBytesArray(offset, length)))
 		counter++
 	}
 	var fragmentsRead atomic.Int
-	for i := 0; i < n; i++ {
+	for int(fragmentsRead.Get()) < n {
 		timeoutAt := time.Now().Add(time.Second)
 		for {
 			recvd := sub.Poll(handler, 10)
-			if recvd == 1 {
+			if recvd >= 1 {
 				fragmentsRead.Add(int32(recvd))
 				logger.Debugf("  have %d fragments", fragmentsRead)
 				break
 			}
 			if time.Now().After(timeoutAt) {
-				logger.Fatalf("%v: timed out waiting for message", time.Now())
-				break
+				suite.Fail("Receive timed out")
 			}
 			time.Sleep(time.Millisecond)
 		}
 	}
-	if int(fragmentsRead.Get()) != n {
-		logger.Fatalf("Expected %d fragment. Got %d", n, fragmentsRead)
-	}
-	if counter != n {
-		logger.Fatalf("Expected %d message. Got %d", n, counter)
-	}
+	suite.Assert().EqualValues(fragmentsRead.Get(), n)
+	suite.Assert().EqualValues(counter, n)
 }
 
-func subAndSend(n int, a *aeron.Aeron, pub *aeron.Publication) {
-	sub := <-a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+func (suite *SysTestSuite) subAndSend(n int, a *aeron.Aeron, pub *aeron.Publication) {
+	sub, err := a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	defer sub.Close()
 
 	// This is basically a requirement since we need to wait
@@ -96,8 +111,8 @@ func subAndSend(n int, a *aeron.Aeron, pub *aeron.Publication) {
 		time.Sleep(time.Millisecond)
 	}
 
-	send(n, pub)
-	receive(n, sub)
+	suite.send(n, pub)
+	suite.receive(n, sub)
 }
 
 func logtest(flag bool) {
@@ -121,45 +136,42 @@ func logtest(flag bool) {
 }
 
 // TestAeronBasics will check for a simple send/receive scenario.
-// As all systests this assumes a running media driver.
-func testAeronBasics() {
+func (suite *SysTestSuite) TestAeronBasics() {
 	logger.Debug("Started TestAeronBasics")
 
-	a, err := aeron.Connect(aeron.NewContext())
+	a, err := aeron.Connect(aeron.NewContext().AeronDir(suite.mediaDriver.TempDir))
 	if err != nil {
-		logger.Fatalf("Failed to connect to driver: %s\n", err.Error())
+		suite.Failf("Failed to connect to driver: %s", err.Error())
 	}
 	defer a.Close()
 
-	pub := <-a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	pub, err := a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	defer pub.Close()
 	//logger.Debugf("Added publication: %v\n", pub)
 
-	subAndSend(1, a, pub)
+	suite.subAndSend(1, a, pub)
 }
 
 // TestAeronSendMultipleMessages tests sending and receive multiple messages in a row.
-// As all systests this assumes a running media driver.
-func testAeronSendMultipleMessages() {
+func (suite *SysTestSuite) TestAeronSendMultipleMessages() {
 	logger.Debug("Started TestAeronSendMultipleMessages")
 
-	a, err := aeron.Connect(aeron.NewContext())
-	if err != nil {
-		logger.Fatalf("Failed to connect to driver: %s\n", err.Error())
-	}
+	a, err := aeron.Connect(aeron.NewContext().AeronDir(suite.mediaDriver.TempDir))
+	suite.Require().Nil(err, "Failed to connect to driver: %s", err)
 	defer a.Close()
 
 	for i := 0; i < 3; i++ {
 		logger.Debugf("NextCorrelationID = %d", a.NextCorrelationID())
 	}
-	if a.NextCorrelationID() == 0 {
-		panic("invalid zero NextCorrelationID")
-	}
+	suite.Require().NotEqual(a.NextCorrelationID(), 0, "invalid zero NextCorrelationID")
 
-	pub := <-a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	pub, err := a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	defer pub.Close()
 
-	sub := <-a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	sub, err := a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	defer sub.Close()
 
 	// This is basically a requirement since we need to wait
@@ -168,14 +180,14 @@ func testAeronSendMultipleMessages() {
 	}
 
 	itCount := 100
-	go send(itCount, pub)
-	receive(itCount, sub)
+	go suite.send(itCount, pub)
+	suite.receive(itCount, sub)
 }
 
 // TestAeronSendMultiplePublications tests sending on multiple publications with a sigle
 // subscription receiving. In IPC local mode this will end up with using the same Publication
 // but it's a scenario nonetheless. As all systests this assumes a running media driver.
-func testAeronSendMultiplePublications() {
+func (suite *SysTestSuite) NotTestedYet_TestAeronSendMultiplePublications() {
 	logger.Debug("Started TestAeronSendMultiplePublications")
 
 	//go func() {
@@ -198,13 +210,15 @@ func testAeronSendMultiplePublications() {
 	pubCount := 10
 	itCount := 100
 
-	sub := <-a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	sub, err := a.AddSubscription(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	defer sub.Close()
 
 	pubs := make([]*aeron.Publication, pubCount)
 
 	for i := 0; i < pubCount; i++ {
-		pub := <-a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+		pub, err := a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+		suite.Require().NoError(err)
 		defer pub.Close()
 
 		pubs[i] = pub
@@ -217,14 +231,14 @@ func testAeronSendMultiplePublications() {
 
 	logger.Debugf(" ==> Got pubs %v", pubs)
 
-	go receive(itCount*pubCount, sub)
+	go suite.receive(itCount*pubCount, sub)
 
 	time.Sleep(200 * time.Millisecond)
 
 	// Send
 	for i := 0; i < itCount; i++ {
 		for pIx, p := range pubs {
-			send(1, p)
+			suite.send(1, p)
 			logger.Debugf("sent %d to pubs[%d]", i, pIx)
 			logger.Debugf("sent %d to pubs[%d]", i, pIx)
 		}
@@ -233,39 +247,37 @@ func testAeronSendMultiplePublications() {
 }
 
 // TestAeronResubscribe test using different subscriptions with the same publication
-func testAeronResubscribe() {
+func (suite *SysTestSuite) NotTestedYet_TestAeronResubscribe() {
 	logger.Debug("Started TestAeronResubscribe")
 
 	a, err := aeron.Connect(aeron.NewContext())
-	if err != nil {
-		logger.Fatal("Failed to connect to driver")
-	}
+	suite.Require().NoError(err)
 	defer a.Close()
 
-	pub := <-a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	pub, err := a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 
-	subAndSend(1, a, pub)
-	subAndSend(1, a, pub)
+	suite.subAndSend(1, a, pub)
+	suite.subAndSend(1, a, pub)
 }
 
 // TestResubStress tests sending and receiving when creating a new subscription for each cycle
-func testResubStress() {
+func (suite *SysTestSuite) NotTestedYet_TestResubStress() {
 	logger.Debug("Started TestAeronResubscribe")
 
 	a, err := aeron.Connect(aeron.NewContext())
-	if err != nil {
-		logger.Fatalf("Failed to connect to driver: %s\n", err.Error())
-	}
+	suite.Require().NoError(err)
 	defer a.Close()
 
-	pub := <-a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	pub, err := a.AddPublication(*ExamplesConfig.TestChannel, int32(*ExamplesConfig.TestStreamID))
+	suite.Require().NoError(err)
 	for i := 0; i < 100; i++ {
-		subAndSend(1, a, pub)
+		suite.subAndSend(1, a, pub)
 		logger.Debugf("bounce %d", i)
 	}
 }
 
-// TestAeronClose simply tests explicit call to Aeron.Close()
+// TestAeronClose simply tests explicit call to ctx.Close()
 func testAeronClose() {
 	logger.Debug("Started TestAeronClose")
 
@@ -277,18 +289,14 @@ func testAeronClose() {
 	a.Close()
 }
 
-func main() {
+func TestSuiteMain(t *testing.T) {
 	flag.Parse()
-
 	logtest(*ExamplesConfig.LoggingOn)
-
-	testAeronBasics()
+	suite.Run(t, new(SysTestSuite))
 
 	//testAeronClose()
 
 	//testAeronResubscribe()
-
-	testAeronSendMultipleMessages()
 
 	//testAeronSendMultiplePublications()
 
