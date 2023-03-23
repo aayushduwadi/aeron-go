@@ -72,12 +72,13 @@ func IsPowerOfTwo(value int64) bool {
 }
 
 // Memcpy will copy length bytes from pointer src to dest
+//
 //go:nocheckptr
 func Memcpy(dest uintptr, src uintptr, length int32) {
 	var i int32
 
 	// batches of 8
-	i8 := length >> 3
+	i8 := length & ^0x7
 	for ; i < i8; i += 8 {
 		destPtr := unsafe.Pointer(dest + uintptr(i))
 		srcPtr := unsafe.Pointer(src + uintptr(i))
@@ -86,7 +87,7 @@ func Memcpy(dest uintptr, src uintptr, length int32) {
 	}
 
 	// batches of 4
-	i4 := (length - i) >> 2
+	i4 := length & ^0x3
 	for ; i < i4; i += 4 {
 		destPtr := unsafe.Pointer(dest + uintptr(i))
 		srcPtr := unsafe.Pointer(src + uintptr(i))

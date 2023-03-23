@@ -19,6 +19,7 @@ package util
 
 import (
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,4 +35,14 @@ func TestMod3(t *testing.T) {
 	for _, v := range tests {
 		assert.Equal(t, FastMod3(v), int32(v%3))
 	}
+}
+
+func TestMemcpy(t *testing.T) {
+	dst := make([]byte, 102)
+	src := make([]byte, 102)
+	for i := range src {
+		src[i] = byte(i)
+	}
+	Memcpy(uintptr(unsafe.Pointer(&dst[0])), uintptr(unsafe.Pointer(&src[0])), 102)
+	assert.Equal(t, src, dst)
 }
