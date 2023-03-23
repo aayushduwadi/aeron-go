@@ -26,3 +26,12 @@ import (
 func TestVersion(t *testing.T) {
 	assert.Equal(t, uint32(512), SemanticVersionCompose(0, 2, 0))
 }
+
+func TestMod3(t *testing.T) {
+	tests := []uint64{
+		0, 1, 2, 3, 100, 101, 102, 1 << 31, 1<<31 - 1, 1<<31 - 2,
+	}
+	for _, v := range tests {
+		assert.Equal(t, FastMod3(v), int32(v%3))
+	}
+}

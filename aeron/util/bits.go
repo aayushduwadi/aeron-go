@@ -59,16 +59,11 @@ func NumberOfTrailingZeroes(value uint32) uint8 {
 
 // FastMod3 is HD recipe for faster division by 3 for 32 bit integers
 func FastMod3(value uint64) int32 {
-
-	table := [62]int32{0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1}
-
-	value = (value >> 16) + (value & 0xFFFF) // Max 0x1FFFE.
-	value = (value >> 8) + (value & 0x00FF)  // Max 0x2FD.
-	value = (value >> 4) + (value & 0x000F)  // Max 0x3D.
-	return table[value]
+	// Modern compilers will convert uint32(value) % 3 to something similar to below,
+	// but make it explicit to ensure it also works with older compilers
+	low := uint32(value)
+	div3 := uint32((uint64(low) * 0xAAAAAAAB) >> 33) // Multiply by ceil(2^33/3) and divide by 2^33
+	return int32(low - div3*3)
 }
 
 // IsPowerOfTwo checks that the argument number is a power of two
