@@ -305,12 +305,14 @@ func (buf *Buffer) GetBytes(offset int32, b []byte) {
 //go:norace
 func (buf *Buffer) WriteBytes(dest *bytes.Buffer, offset int32, length int32) {
 	BoundsCheck(offset, length, buf.length)
-	// grow the buffer all at once to prevent additional allocations.
-	dest.Grow(int(length))
-	for ix := 0; ix < int(length); ix++ {
-		uptr := unsafe.Pointer(uintptr(buf.bufferPtr) + uintptr(offset) + uintptr(ix))
-		dest.WriteByte(*(*uint8)(uptr))
-	}
+
+	var slice []byte
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+	sh.Data = uintptr(buf.bufferPtr) + uintptr(offset)
+	sh.Len = int(length)
+	sh.Cap = int(length)
+
+	dest.Write(slice)
 }
 
 //go:norace

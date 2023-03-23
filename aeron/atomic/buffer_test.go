@@ -17,9 +17,11 @@ limitations under the License.
 package atomic
 
 import (
-	"github.com/stretchr/testify/assert"
+	"bytes"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var buffer *Buffer
@@ -112,4 +114,14 @@ func TestWrap(t *testing.T) {
 
 	assert.NotEqual(t, int64(31415), buffer.GetInt64Volatile(1))
 	assert.Equal(t, int64(31415), buffer.GetInt64Volatile(0))
+}
+
+func TestWriteBytes(t *testing.T) {
+	buffer = MakeBuffer(make([]byte, 32), 32)
+	buffer.PutInt8(1, 1)
+	buffer.PutInt8(5, 5)
+
+	var dest bytes.Buffer
+	buffer.WriteBytes(&dest, 1, 5)
+	assert.Equal(t, dest.Bytes(), []byte{1, 0, 0, 0, 5})
 }
