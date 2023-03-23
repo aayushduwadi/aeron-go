@@ -330,6 +330,11 @@ func (buf *Buffer) PutBytesArray(index int32, arr *[]byte, srcint32 int32, lengt
 //go:norace
 func BoundsCheck(index int32, length int32, myLength int32) {
 	if (index + length) > myLength {
-		log.Fatal(fmt.Sprintf("Out of Bounds. int32: %d + %d Capacity: %d", index, length, myLength))
+		Panic(index, length, myLength)
 	}
+}
+
+//go:noinline
+func Panic(index, length, myLength int32) {
+	log.Fatal(fmt.Sprintf("Out of Bounds. int32: %d + %d Capacity: %d", index, length, myLength))
 }
