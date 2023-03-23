@@ -16,10 +16,11 @@
 package logbuffer
 
 import (
-	"github.com/lirm/aeron-go/aeron/atomic"
-	"github.com/lirm/aeron-go/aeron/util/memmap"
 	"os"
 	"unsafe"
+
+	"github.com/lirm/aeron-go/aeron/atomic"
+	"github.com/lirm/aeron-go/aeron/util/memmap"
 )
 
 const Filename string = "logbuffers.bin"
@@ -33,7 +34,7 @@ func NewTestingLogbuffer() (*LogBuffers, error) {
 	}
 	basePtr := uintptr(mmap.GetMemoryPtr())
 	ptr := unsafe.Pointer(basePtr + uintptr(int64(logLength-LogMetaDataLength)))
-	buf := atomic.MakeBuffer(ptr, LogMetaDataLength)
+	buf := atomic.NewBufferPointer(ptr, LogMetaDataLength)
 
 	var meta LogBufferMetaData
 	meta.Wrap(buf, 0)

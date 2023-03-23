@@ -37,7 +37,7 @@ func prepareCnc(t *testing.T) (string, *counters.MetaDataFlyweight) {
 	mmap, err := memmap.NewFile(counterFileName, 0, 256*1024)
 	require.NoError(t, err)
 
-	cncBuffer := atomic.MakeBuffer(mmap.GetMemoryPtr(), mmap.GetMemorySize())
+	cncBuffer := atomic.NewBufferPointer(mmap.GetMemoryPtr(), int32(mmap.GetMemorySize()))
 	var meta counters.MetaDataFlyweight
 	meta.Wrap(cncBuffer, 0)
 	meta.CncVersion.Set(counters.CurrentCncVersion)
@@ -92,12 +92,12 @@ func TestNewPublication(t *testing.T) {
 		t.Logf("meta: %v", metaBuffer)
 	}
 
-	counter := atomic.MakeBuffer(make([]byte, 256))
+	counter := atomic.NewBufferSlice(make([]byte, 256))
 	pub.pubLimit = NewPosition(counter, 0)
 	t.Logf("pub: %v", pub.pubLimit)
 	require.EqualValues(t, pub.pubLimit.get(), 0)
 
-	srcBuffer := atomic.MakeBuffer(make([]byte, 256))
+	srcBuffer := atomic.NewBufferSlice(make([]byte, 256))
 
 	milliEpoch := (time.Nanosecond * time.Duration(time.Now().UnixNano())) / time.Millisecond
 	pos := pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)
@@ -152,12 +152,12 @@ func TestPublication_Offer(t *testing.T) {
 		t.Logf("meta: %v", metaBuffer)
 	}
 
-	counter := atomic.MakeBuffer(make([]byte, 256))
+	counter := atomic.NewBufferSlice(make([]byte, 256))
 	pub.pubLimit = NewPosition(counter, 0)
 	t.Logf("pub: %v", pub.pubLimit)
 	require.EqualValues(t, pub.pubLimit.get(), 0)
 
-	srcBuffer := atomic.MakeBuffer(make([]byte, 256))
+	srcBuffer := atomic.NewBufferSlice(make([]byte, 256))
 	//milliEpoch := (time.Nanosecond * time.Duration(time.Now().UnixNano())) / time.Millisecond
 	//pub.metaData.TimeOfLastStatusMsg.Set(milliEpoch.Nanoseconds())
 

@@ -74,7 +74,7 @@ func main() {
 
 	for counter := 0; counter < *examples.ExamplesConfig.Messages; counter++ {
 		message := fmt.Sprintf("this is a message %d", counter)
-		srcBuffer := atomic.MakeBuffer(([]byte)(message))
+		srcBuffer := atomic.NewBufferSlice([]byte(message))
 		ret := publication.Offer(srcBuffer, 0, int32(len(message)), nil)
 		switch ret {
 		case aeron.NotConnected:

@@ -93,7 +93,7 @@ func main() {
 		opts.IdleStrategy.Idle(clusterClient.Poll())
 	}
 
-	sendBuf := atomic.MakeBuffer(make([]byte, 100))
+	sendBuf := atomic.NewBufferSlice(make([]byte, 100))
 	for round := 1; round <= 10; round++ {
 		fmt.Printf("starting round #%d\n", round)
 		listener.messageCount = 0

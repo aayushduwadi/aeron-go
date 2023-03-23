@@ -75,7 +75,7 @@ func (s *EchoService) OnTimerEvent(correlationId, timestamp int64) {
 func (s *EchoService) OnTakeSnapshot(publication *aeron.Publication) {
 	fmt.Printf("OnTakeSnapshot - streamId=%d sessionId=%d messageCount=%d\n",
 		publication.StreamID(), publication.SessionID(), s.messageCount)
-	buf := atomic.MakeBuffer(make([]byte, 4))
+	buf := atomic.NewBufferSlice(make([]byte, 4))
 	buf.PutInt32(0, s.messageCount)
 	for {
 		result := publication.Offer(buf, 0, buf.Capacity(), nil)

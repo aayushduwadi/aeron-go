@@ -32,7 +32,7 @@ func TestMmapBasics(t *testing.T) {
 	// t.Logf("mmap: %v, len:%d, err:%v", mmap.GetMemoryPtr(), mmap.GetMemorySize(), err)
 	fmt.Printf("mmap: %v, len:%d, err:%v\n", mmap.GetMemoryPtr(), mmap.GetMemorySize(), err)
 
-	buf := atomic.MakeBuffer(mmap.GetMemoryPtr(), mmap.GetMemorySize())
+	buf := atomic.NewBufferPointer(mmap.GetMemoryPtr(), int32(mmap.GetMemorySize()))
 	// t.Logf("created atomic buffer: %v", buf)
 	fmt.Printf("created atomic buffer: %v\n", buf)
 

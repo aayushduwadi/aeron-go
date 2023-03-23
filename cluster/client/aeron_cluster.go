@@ -375,7 +375,7 @@ func (ac *AeronCluster) sendConnectRequest(responseChannel string) error {
 	if err := req.Encode(marshaller, writer, true); err != nil {
 		return err
 	}
-	buffer := atomic.MakeBuffer(writer.Bytes())
+	buffer := atomic.NewBufferSlice(writer.Bytes())
 	result := ac.ingressPub.Offer(buffer, 0, buffer.Capacity(), nil)
 	if result >= 0 {
 		return nil

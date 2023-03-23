@@ -50,7 +50,7 @@ type SubscriptionTestSuite struct {
 
 func (s *SubscriptionTestSuite) SetupTest() {
 	s.headerLength = logbuffer.DataFrameHeader_Length
-	s.atomicReadBuffer = atomic.MakeBuffer(make([]byte, s.headerLength), s.headerLength)
+	s.atomicReadBuffer = atomic.NewBufferSlice(make([]byte, s.headerLength))
 	s.cc = NewMockReceivingConductor(s.T())
 	s.fragmentHandlerMock = term.NewMockFragmentHandler(s.T())
 	s.fragmentHandler = s.fragmentHandlerMock.Execute

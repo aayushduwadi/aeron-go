@@ -96,7 +96,7 @@ func main() {
 
 	for {
 		counter := 0
-		srcBuffer := atomic.MakeBuffer([]byte(subChannel), len(subChannel))
+		srcBuffer := atomic.NewBufferSlice([]byte(subChannel))
 		ret := publication.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)
 		success := false
 		switch ret {

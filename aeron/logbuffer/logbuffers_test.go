@@ -18,13 +18,14 @@ limitations under the License.
 package logbuffer
 
 import (
+	"os"
+	"testing"
+
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/util"
 	"github.com/lirm/aeron-go/aeron/util/memmap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestWrap(t *testing.T) {
@@ -77,7 +78,7 @@ func TestLogBuffers_BufferFail(t *testing.T) {
 
 func TestHeader_ReservedValue(t *testing.T) {
 	bytes := make([]byte, 1000)
-	buffer := atomic.MakeBuffer(bytes)
+	buffer := atomic.NewBufferSlice(bytes)
 	assert.Equal(t, buffer.Capacity(), int32(1000))
 
 	var header Header

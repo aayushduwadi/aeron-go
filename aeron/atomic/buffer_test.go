@@ -65,7 +65,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestGetAndAddInt64(t *testing.T) {
-	buffer = MakeBuffer(make([]byte, 32), 32)
+	buffer = NewBufferSlice(make([]byte, 32))
 	buffer.Fill(0)
 
 	assert.Equal(t, int64(0), buffer.GetAndAddInt64(0, 7))
@@ -85,7 +85,7 @@ func TestGetAndAddInt64(t *testing.T) {
 }
 
 func TestPutInt64Ordered(t *testing.T) {
-	buffer = MakeBuffer(make([]byte, 32), 32)
+	buffer = NewBufferSlice(make([]byte, 32))
 	buffer.Fill(0)
 
 	buffer.PutInt64Ordered(1, 31415)
@@ -97,7 +97,7 @@ func TestPutInt64Ordered(t *testing.T) {
 func TestWrap(t *testing.T) {
 	bytes := make([]byte, 32)
 	ptr := unsafe.Pointer(&bytes[0])
-	buffer = MakeBuffer(bytes, 32)
+	buffer = NewBufferSlice(bytes)
 	buffer.Fill(0)
 	t.Logf("buf: %v", buffer)
 
@@ -117,7 +117,7 @@ func TestWrap(t *testing.T) {
 }
 
 func TestWriteBytes(t *testing.T) {
-	buffer = MakeBuffer(make([]byte, 32), 32)
+	buffer = NewBufferSlice(make([]byte, 32))
 	buffer.PutInt8(1, 1)
 	buffer.PutInt8(5, 5)
 

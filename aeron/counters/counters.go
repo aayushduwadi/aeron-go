@@ -138,7 +138,7 @@ func MapFile(filename string) (*MetaDataFlyweight, *memmap.File, error) {
 		return nil, nil, err
 	}
 
-	cncBuffer := atomic.MakeBuffer(cncMap.GetMemoryPtr(), cncMap.GetMemorySize())
+	cncBuffer := atomic.NewBufferPointer(cncMap.GetMemoryPtr(), int32(cncMap.GetMemorySize()))
 	var meta MetaDataFlyweight
 	meta.Wrap(cncBuffer, 0)
 

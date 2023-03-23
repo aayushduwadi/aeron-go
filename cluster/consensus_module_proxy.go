@@ -31,7 +31,7 @@ func newConsensusModuleProxy(
 		marshaller:    codecs.NewSbeGoMarshaller(),
 		rangeChecking: options.RangeChecking,
 		publication:   publication,
-		buffer:        atomic.MakeBuffer(make([]byte, 500)),
+		buffer:        atomic.NewBufferSlice(make([]byte, 500)),
 	}
 }
 
@@ -101,7 +101,7 @@ func (proxy *consensusModuleProxy) initBuffer(templateId uint16, blockLength uin
 
 // send to our request publication
 func (proxy *consensusModuleProxy) send(payload []byte) {
-	buffer := atomic.MakeBuffer(payload)
+	buffer := atomic.NewBufferSlice(payload)
 	for proxy.offer(buffer, buffer.Capacity()) < 0 {
 		proxy.idleStrategy.Idle(0)
 	}

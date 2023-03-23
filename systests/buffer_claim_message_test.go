@@ -15,13 +15,14 @@
 package systests
 
 import (
+	"testing"
+	"time"
+
 	"github.com/lirm/aeron-go/aeron"
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/logbuffer"
 	"github.com/lirm/aeron-go/systests/driver"
 	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 const (
@@ -69,7 +70,7 @@ func (suite *BufferClaimMessageTestSuite) TestShouldReceivePublishedMessageWithI
 
 	var bufferClaim logbuffer.Claim
 	arr := make([]byte, messageLength)
-	srcBuffer := atomic.MakeBuffer(arr)
+	srcBuffer := atomic.NewBufferSlice(arr)
 
 	subscription, err := suite.connection.AddSubscription(suite.channel, streamId)
 	suite.Require().NoError(err)

@@ -20,10 +20,11 @@ package systests
 import (
 	"flag"
 	"fmt"
-	"github.com/lirm/aeron-go/systests/driver"
-	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
+
+	"github.com/lirm/aeron-go/systests/driver"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/lirm/aeron-go/aeron"
 	"github.com/lirm/aeron-go/aeron/atomic"
@@ -60,7 +61,7 @@ func (suite *SysTestSuite) TearDownSuite() {
 
 func (suite *SysTestSuite) send(n int, pub *aeron.Publication) {
 	message := "this is a message"
-	srcBuffer := atomic.MakeBuffer(([]byte)(message))
+	srcBuffer := atomic.NewBufferSlice([]byte(message))
 
 	for i := 0; i < n; i++ {
 		timeoutAt := time.Now().Add(time.Second * 5)
