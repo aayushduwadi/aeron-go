@@ -15,14 +15,15 @@
 package aeron
 
 import (
+	"math"
+	"testing"
+
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/counters"
 	"github.com/lirm/aeron-go/aeron/logbuffer"
 	"github.com/lirm/aeron-go/aeron/logbuffer/term"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"math"
-	"testing"
 )
 
 const (
@@ -48,7 +49,7 @@ type SubscriptionTestSuite struct {
 }
 
 func (s *SubscriptionTestSuite) SetupTest() {
-	s.headerLength = logbuffer.DataFrameHeader.Length
+	s.headerLength = logbuffer.DataFrameHeader_Length
 	s.atomicReadBuffer = atomic.MakeBuffer(make([]byte, s.headerLength), s.headerLength)
 	s.cc = NewMockReceivingConductor(s.T())
 	s.fragmentHandlerMock = term.NewMockFragmentHandler(s.T())

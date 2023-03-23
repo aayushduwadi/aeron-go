@@ -17,18 +17,19 @@ limitations under the License.
 package aeron
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/counters"
 	"github.com/lirm/aeron-go/aeron/driver"
 	"github.com/lirm/aeron-go/aeron/logbuffer"
-	"github.com/lirm/aeron-go/aeron/ringbuffer"
+	rb "github.com/lirm/aeron-go/aeron/ringbuffer"
 	"github.com/lirm/aeron-go/aeron/util"
 	"github.com/lirm/aeron-go/aeron/util/memmap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
-	"time"
 )
 
 func prepareCnc(t *testing.T) (string, *counters.MetaDataFlyweight) {
@@ -113,8 +114,8 @@ func TestNewPublication(t *testing.T) {
 	pub.pubLimit.set(1024)
 	pos = pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)
 	t.Logf("new pos: %d", pos)
-	assert.EqualValuesf(t, pos, srcBuffer.Capacity()+logbuffer.DataFrameHeader.Length,
-		"Expected publication to advance to position %d", srcBuffer.Capacity()+logbuffer.DataFrameHeader.Length)
+	assert.EqualValuesf(t, pos, srcBuffer.Capacity()+logbuffer.DataFrameHeader_Length,
+		"Expected publication to advance to position %d", srcBuffer.Capacity()+logbuffer.DataFrameHeader_Length)
 }
 
 func TestPublication_Offer(t *testing.T) {
@@ -163,7 +164,7 @@ func TestPublication_Offer(t *testing.T) {
 	termBufLen := lb.Buffer(0).Capacity()
 	t.Logf("Term buffer length: %d", termBufLen)
 
-	frameLen := int64(srcBuffer.Capacity() + logbuffer.DataFrameHeader.Length)
+	frameLen := int64(srcBuffer.Capacity() + logbuffer.DataFrameHeader_Length)
 	pub.pubLimit.set(int64(termBufLen))
 	for i := int64(1); i <= int64(termBufLen)/frameLen; i++ {
 		pos := pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)

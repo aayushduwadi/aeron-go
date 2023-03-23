@@ -26,23 +26,23 @@ const (
 )
 
 func flagsOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.FlagsFieldOffset
+	return frameOffset + DataFrameHeader_FlagsFieldOffset
 }
 
 func lengthOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.FrameLengthFieldOffset
+	return frameOffset + DataFrameHeader_FrameLengthFieldOffset
 }
 
 func termIdOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.TermIDFieldOffset
+	return frameOffset + DataFrameHeader_TermIDFieldOffset
 }
 
 func sessionIdOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.SessionIDFieldOffset
+	return frameOffset + DataFrameHeader_SessionIDFieldOffset
 }
 
 func streamIdOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.StreamIDFieldOffset
+	return frameOffset + DataFrameHeader_StreamIDFieldOffset
 }
 
 func ComputeMaxMessageLength(capacity int32) int32 {
@@ -50,11 +50,11 @@ func ComputeMaxMessageLength(capacity int32) int32 {
 }
 
 func typeOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.TypeFieldOffset
+	return frameOffset + DataFrameHeader_TypeFieldOffset
 }
 
 func reservedValueOffset(frameOffset int32) int32 {
-	return frameOffset + DataFrameHeader.ReservedValueFieldOffset
+	return frameOffset + DataFrameHeader_ReservedValueFieldOffset
 }
 
 func GetFlags(logBuffer *atomic.Buffer, frameOffset int32) uint8 {
@@ -92,7 +92,7 @@ func SetFrameLength(logBuffer *atomic.Buffer, frameOffset int32, frameLength int
 }
 
 func IsPaddingFrame(logBuffer *atomic.Buffer, frameOffset int32) bool {
-	return logBuffer.GetUInt16(typeOffset(frameOffset)) == DataFrameHeader.TypePad
+	return logBuffer.GetUInt16(typeOffset(frameOffset)) == DataFrameHeader_TypePad
 }
 
 func SetFrameType(logBuffer *atomic.Buffer, frameOffset int32, typ uint16) {
