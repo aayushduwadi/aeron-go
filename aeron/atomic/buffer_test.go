@@ -18,6 +18,7 @@ package atomic
 
 import (
 	"bytes"
+	"strconv"
 	"testing"
 	"unsafe"
 
@@ -124,4 +125,18 @@ func TestWriteBytes(t *testing.T) {
 	var dest bytes.Buffer
 	buffer.WriteBytes(&dest, 1, 5)
 	assert.Equal(t, dest.Bytes(), []byte{1, 0, 0, 0, 5})
+}
+
+func BenchmarkWriteBytes(b *testing.B) {
+	dst := bytes.NewBuffer(make([]byte, 4096))
+	src := NewBufferSlice(make([]byte, 4096))
+	b.ResetTimer()
+	for _, k := range []int32{0, 2, 4, 8, 16, 64, 256, 1024, 4096} {
+		b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				dst.Reset()
+				src.WriteBytes(dst, 0, k)
+			}
+		})
+	}
 }

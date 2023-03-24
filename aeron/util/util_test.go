@@ -18,6 +18,7 @@ limitations under the License.
 package util
 
 import (
+	"strconv"
 	"testing"
 	"unsafe"
 
@@ -45,4 +46,20 @@ func TestMemcpy(t *testing.T) {
 	}
 	Memcpy(uintptr(unsafe.Pointer(&dst[0])), uintptr(unsafe.Pointer(&src[0])), 102)
 	assert.Equal(t, src, dst)
+}
+
+func BenchmarkMemcpy(b *testing.B) {
+	dst := make([]byte, 4096)
+	src := make([]byte, 4096)
+	dstp := uintptr(unsafe.Pointer(&dst[0]))
+	srcp := uintptr(unsafe.Pointer(&src[0]))
+	b.ResetTimer()
+	for _, k := range []int32{0, 2, 4, 8, 16, 64, 256, 1024, 4096} {
+		b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				Memcpy(dstp, srcp, k)
+			}
+
+		})
+	}
 }
