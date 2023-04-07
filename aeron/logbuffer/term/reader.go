@@ -44,8 +44,8 @@ func Read(termBuffer *atomic.Buffer, termOffset int32, handler FragmentHandler, 
 		if !logbuffer.IsPaddingFrame(termBuffer, fragmentOffset) {
 			header.Wrap(termBuffer.Ptr(), termBuffer.Capacity())
 			header.SetOffset(fragmentOffset)
-			handler(termBuffer, fragmentOffset+logbuffer.DataFrameHeader.Length,
-				frameLength-logbuffer.DataFrameHeader.Length, header)
+			handler(termBuffer, fragmentOffset+logbuffer.DataFrameHeader_Length,
+				frameLength-logbuffer.DataFrameHeader_Length, header)
 
 			fragmentsRead++
 		}
@@ -72,8 +72,8 @@ func BoundedRead(termBuffer *atomic.Buffer, termOffset int32, offsetLimit int32,
 		if !logbuffer.IsPaddingFrame(termBuffer, fragmentOffset) {
 			header.Wrap(termBuffer.Ptr(), termBuffer.Capacity())
 			header.SetOffset(fragmentOffset)
-			handler(termBuffer, fragmentOffset+logbuffer.DataFrameHeader.Length,
-				frameLength-logbuffer.DataFrameHeader.Length, header)
+			handler(termBuffer, fragmentOffset+logbuffer.DataFrameHeader_Length,
+				frameLength-logbuffer.DataFrameHeader_Length, header)
 
 			fragmentsRead++
 		}

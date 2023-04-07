@@ -126,7 +126,7 @@ func (m *LogBufferMetaData) Wrap(buf *atomic.Buffer, offset int) flyweight.Flywe
 	pos += m.TermLen.Wrap(buf, pos)
 	pos += m.PageSize.Wrap(buf, pos)
 	pos += m.padding2.Wrap(buf, pos, util.CacheLineLength, util.CacheLineLength)
-	pos += m.DefaultFrameHeader.Wrap(buf, pos, DataFrameHeader.Length)
+	pos += m.DefaultFrameHeader.Wrap(buf, pos, DataFrameHeader_Length)
 	pos += m.padding3.Wrap(buf, pos, util.CacheLineLength*2, util.CacheLineLength)
 
 	m.SetSize(pos - offset)

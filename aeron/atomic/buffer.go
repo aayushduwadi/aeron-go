@@ -34,7 +34,18 @@ type Buffer struct {
 	length    int32
 }
 
+// Returns a new atomic buffer for the specified pointer and length
+func NewBufferPointer(ptr unsafe.Pointer, length int32) *Buffer {
+	return &Buffer{bufferPtr: ptr, length: length}
+}
+
+// Returns a new atomic buffer for the complete byte slice
+func NewBufferSlice(slice []byte) *Buffer {
+	return &Buffer{bufferPtr: unsafe.Pointer(&slice[0]), length: int32(len(slice))}
+}
+
 // MakeBuffer takes a variety of argument options and returns a new atomic.Buffer to the best of its ability
+//
 //	Options for calling
 //		MakeAtomicBuffer(Pointer)
 //		MakeAtomicBuffer([]byte)
@@ -85,6 +96,7 @@ func MakeBuffer(args ...interface{}) *Buffer {
 }
 
 // Wrap raw memory with this buffer instance
+//
 //go:norace
 func (buf *Buffer) Wrap(buffer unsafe.Pointer, length int32) *Buffer {
 	buf.bufferPtr = buffer
@@ -93,12 +105,14 @@ func (buf *Buffer) Wrap(buffer unsafe.Pointer, length int32) *Buffer {
 }
 
 // Ptr will return the raw memory pointer for the underlying buffer
+//
 //go:norace
 func (buf *Buffer) Ptr() unsafe.Pointer {
 	return buf.bufferPtr
 }
 
 // Capacity of the buffer, which is used for bound checking
+//
 //go:norace
 func (buf *Buffer) Capacity() int32 {
 	return buf.length
@@ -106,6 +120,7 @@ func (buf *Buffer) Capacity() int32 {
 
 // Fill the buffer with the value of the argument byte. Generally used for initialization,
 // since it's somewhat expensive.
+//
 //go:norace
 func (buf *Buffer) Fill(b uint8) {
 	if buf.length == 0 {
@@ -302,15 +317,18 @@ func (buf *Buffer) GetBytes(offset int32, b []byte) {
 
 // WriteBytes writes data from offset and length to the given dest buffer. This will
 // grow the buffer as needed.
+//
 //go:norace
 func (buf *Buffer) WriteBytes(dest *bytes.Buffer, offset int32, length int32) {
 	BoundsCheck(offset, length, buf.length)
-	// grow the buffer all at once to prevent additional allocations.
-	dest.Grow(int(length))
-	for ix := 0; ix < int(length); ix++ {
-		uptr := unsafe.Pointer(uintptr(buf.bufferPtr) + uintptr(offset) + uintptr(ix))
-		dest.WriteByte(*(*uint8)(uptr))
-	}
+
+	var slice []byte
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+	sh.Data = uintptr(buf.bufferPtr) + uintptr(offset)
+	sh.Len = int(length)
+	sh.Cap = int(length)
+
+	dest.Write(slice)
 }
 
 //go:norace
@@ -325,9 +343,15 @@ func (buf *Buffer) PutBytesArray(index int32, arr *[]byte, srcint32 int32, lengt
 
 // BoundsCheck is helper function to make sure buffer writes and reads to
 // not go out of bounds on stated buffer capacity
+//
 //go:norace
 func BoundsCheck(index int32, length int32, myLength int32) {
 	if (index + length) > myLength {
-		log.Fatal(fmt.Sprintf("Out of Bounds. int32: %d + %d Capacity: %d", index, length, myLength))
+		Panic(index, length, myLength)
 	}
+}
+
+//go:noinline
+func Panic(index, length, myLength int32) {
+	log.Fatal(fmt.Sprintf("Out of Bounds. int32: %d + %d Capacity: %d", index, length, myLength))
 }

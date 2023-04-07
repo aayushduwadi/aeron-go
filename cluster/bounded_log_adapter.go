@@ -14,6 +14,7 @@ package cluster
 
 import (
 	"bytes"
+
 	"github.com/lirm/aeron-go/aeron"
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/logbuffer"
@@ -65,7 +66,7 @@ func (adapter *boundedLogAdapter) onFragment(
 		if (flags & endFrag) == endFrag {
 			msgLength := adapter.builder.Len()
 			adapter.onMessage(
-				atomic.MakeBuffer(adapter.builder.Bytes(), msgLength),
+				atomic.NewBufferSlice(adapter.builder.Bytes()),
 				int32(0),
 				int32(msgLength),
 				header)

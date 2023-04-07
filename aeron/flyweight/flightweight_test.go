@@ -37,7 +37,7 @@ func (m *StringFly) Wrap(buf *atomic.Buffer, offset int) Flyweight {
 
 func TestStringFlyweight(t *testing.T) {
 	str := "Hello worlds!"
-	buf := atomic.MakeBuffer(make([]byte, 128), 128)
+	buf := atomic.NewBufferSlice(make([]byte, 128))
 
 	// TODO Test aligned reads
 
@@ -80,7 +80,7 @@ func (m *PaddedFly) Wrap(buf *atomic.Buffer, offset int) Flyweight {
 }
 
 func TestPadding_Wrap(t *testing.T) {
-	buf := atomic.MakeBuffer(make([]byte, 256), 256)
+	buf := atomic.NewBufferSlice(make([]byte, 256))
 
 	var fw PaddedFly
 	fw.Wrap(buf, 0)

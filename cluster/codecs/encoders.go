@@ -167,7 +167,7 @@ func CloseSessionRequestPacket(
 }
 
 func MakeClusterMessageBuffer(templateId, blockLength uint16) *atomic.Buffer {
-	buf := atomic.MakeBuffer(make([]byte, 8+blockLength))
+	buf := atomic.NewBufferSlice(make([]byte, 8+blockLength))
 	buf.PutUInt16(0, blockLength)
 	buf.PutUInt16(2, templateId)
 	buf.PutUInt16(4, 111) // schemaId

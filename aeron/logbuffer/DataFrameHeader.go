@@ -16,6 +16,29 @@ limitations under the License.
 
 package logbuffer
 
+const DataFrameHeader_FrameLengthFieldOffset int32 = 0
+const DataFrameHeader_VersionFieldOffset int32 = 4
+const DataFrameHeader_FlagsFieldOffset int32 = 5
+const DataFrameHeader_TypeFieldOffset int32 = 6
+const DataFrameHeader_TermOffsetFieldOffset int32 = 8
+const DataFrameHeader_SessionIDFieldOffset int32 = 12
+const DataFrameHeader_StreamIDFieldOffset int32 = 16
+const DataFrameHeader_TermIDFieldOffset int32 = 20
+const DataFrameHeader_ReservedValueFieldOffset int32 = 24
+const DataFrameHeader_DataOffset int32 = 32
+
+const DataFrameHeader_Length int32 = 32
+
+const DataFrameHeader_TypePad uint16 = 0x00
+const DataFrameHeader_TypeData uint16 = 0x01
+const DataFrameHeader_TypeNAK uint16 = 0x02
+const DataFrameHeader_TypeSM uint16 = 0x03
+const DataFrameHeader_TypeErr uint16 = 0x04
+const DataFrameHeader_TypeSetup uint16 = 0x05
+const DataFrameHeader_TypeExt uint16 = 0xFFFF
+
+const DataFrameHeader_CurrentVersion int8 = 0x0
+
 var DataFrameHeader = struct {
 	FrameLengthFieldOffset   int32
 	VersionFieldOffset       int32
@@ -40,26 +63,26 @@ var DataFrameHeader = struct {
 
 	CurrentVersion int8
 }{
-	0,
-	4,
-	5,
-	6,
-	8,
-	12,
-	16,
-	20,
-	24,
-	32,
+	DataFrameHeader_FrameLengthFieldOffset,
+	DataFrameHeader_VersionFieldOffset,
+	DataFrameHeader_FlagsFieldOffset,
+	DataFrameHeader_TypeFieldOffset,
+	DataFrameHeader_TermOffsetFieldOffset,
+	DataFrameHeader_SessionIDFieldOffset,
+	DataFrameHeader_StreamIDFieldOffset,
+	DataFrameHeader_TermIDFieldOffset,
+	DataFrameHeader_ReservedValueFieldOffset,
+	DataFrameHeader_DataOffset,
 
-	32,
+	DataFrameHeader_Length,
 
-	0x00,
-	0x01,
-	0x02,
-	0x03,
-	0x04,
-	0x05,
-	0xFFFF,
+	DataFrameHeader_TypePad,
+	DataFrameHeader_TypeData,
+	DataFrameHeader_TypeNAK,
+	DataFrameHeader_TypeSM,
+	DataFrameHeader_TypeErr,
+	DataFrameHeader_TypeSetup,
+	DataFrameHeader_TypeExt,
 
-	0x0,
+	DataFrameHeader_CurrentVersion,
 }

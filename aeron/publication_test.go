@@ -17,18 +17,19 @@ limitations under the License.
 package aeron
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/counters"
 	"github.com/lirm/aeron-go/aeron/driver"
 	"github.com/lirm/aeron-go/aeron/logbuffer"
-	"github.com/lirm/aeron-go/aeron/ringbuffer"
+	rb "github.com/lirm/aeron-go/aeron/ringbuffer"
 	"github.com/lirm/aeron-go/aeron/util"
 	"github.com/lirm/aeron-go/aeron/util/memmap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
-	"time"
 )
 
 func prepareCnc(t *testing.T) (string, *counters.MetaDataFlyweight) {
@@ -36,7 +37,7 @@ func prepareCnc(t *testing.T) (string, *counters.MetaDataFlyweight) {
 	mmap, err := memmap.NewFile(counterFileName, 0, 256*1024)
 	require.NoError(t, err)
 
-	cncBuffer := atomic.MakeBuffer(mmap.GetMemoryPtr(), mmap.GetMemorySize())
+	cncBuffer := atomic.NewBufferPointer(mmap.GetMemoryPtr(), int32(mmap.GetMemorySize()))
 	var meta counters.MetaDataFlyweight
 	meta.Wrap(cncBuffer, 0)
 	meta.CncVersion.Set(counters.CurrentCncVersion)
@@ -91,12 +92,12 @@ func TestNewPublication(t *testing.T) {
 		t.Logf("meta: %v", metaBuffer)
 	}
 
-	counter := atomic.MakeBuffer(make([]byte, 256))
+	counter := atomic.NewBufferSlice(make([]byte, 256))
 	pub.pubLimit = NewPosition(counter, 0)
 	t.Logf("pub: %v", pub.pubLimit)
 	require.EqualValues(t, pub.pubLimit.get(), 0)
 
-	srcBuffer := atomic.MakeBuffer(make([]byte, 256))
+	srcBuffer := atomic.NewBufferSlice(make([]byte, 256))
 
 	milliEpoch := (time.Nanosecond * time.Duration(time.Now().UnixNano())) / time.Millisecond
 	pos := pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)
@@ -113,8 +114,8 @@ func TestNewPublication(t *testing.T) {
 	pub.pubLimit.set(1024)
 	pos = pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)
 	t.Logf("new pos: %d", pos)
-	assert.EqualValuesf(t, pos, srcBuffer.Capacity()+logbuffer.DataFrameHeader.Length,
-		"Expected publication to advance to position %d", srcBuffer.Capacity()+logbuffer.DataFrameHeader.Length)
+	assert.EqualValuesf(t, pos, srcBuffer.Capacity()+logbuffer.DataFrameHeader_Length,
+		"Expected publication to advance to position %d", srcBuffer.Capacity()+logbuffer.DataFrameHeader_Length)
 }
 
 func TestPublication_Offer(t *testing.T) {
@@ -151,19 +152,19 @@ func TestPublication_Offer(t *testing.T) {
 		t.Logf("meta: %v", metaBuffer)
 	}
 
-	counter := atomic.MakeBuffer(make([]byte, 256))
+	counter := atomic.NewBufferSlice(make([]byte, 256))
 	pub.pubLimit = NewPosition(counter, 0)
 	t.Logf("pub: %v", pub.pubLimit)
 	require.EqualValues(t, pub.pubLimit.get(), 0)
 
-	srcBuffer := atomic.MakeBuffer(make([]byte, 256))
+	srcBuffer := atomic.NewBufferSlice(make([]byte, 256))
 	//milliEpoch := (time.Nanosecond * time.Duration(time.Now().UnixNano())) / time.Millisecond
 	//pub.metaData.TimeOfLastStatusMsg.Set(milliEpoch.Nanoseconds())
 
 	termBufLen := lb.Buffer(0).Capacity()
 	t.Logf("Term buffer length: %d", termBufLen)
 
-	frameLen := int64(srcBuffer.Capacity() + logbuffer.DataFrameHeader.Length)
+	frameLen := int64(srcBuffer.Capacity() + logbuffer.DataFrameHeader_Length)
 	pub.pubLimit.set(int64(termBufLen))
 	for i := int64(1); i <= int64(termBufLen)/frameLen; i++ {
 		pos := pub.Offer(srcBuffer, 0, srcBuffer.Capacity(), nil)

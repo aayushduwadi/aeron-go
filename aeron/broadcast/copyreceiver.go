@@ -32,7 +32,7 @@ type CopyReceiver struct {
 func NewCopyReceiver(receiver *Receiver) *CopyReceiver {
 	bcast := new(CopyReceiver)
 	bcast.receiver = receiver
-	bcast.scratchBuffer = atomic.MakeBuffer(make([]byte, 4096))
+	bcast.scratchBuffer = atomic.NewBufferSlice(make([]byte, 4096))
 
 	// Scroll to the latest unprocessed
 	for bcast.receiver.receiveNext() {

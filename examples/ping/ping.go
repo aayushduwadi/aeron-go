@@ -103,7 +103,7 @@ func main() {
 		}
 	}
 
-	srcBuffer := atomic.MakeBuffer(make([]byte, *examples.ExamplesConfig.Size))
+	srcBuffer := atomic.NewBufferSlice(make([]byte, *examples.ExamplesConfig.Size))
 
 	warmupIt := 1000
 	logger.Infof("Sending %d messages of %d bytes for warmup", warmupIt, srcBuffer.Capacity())

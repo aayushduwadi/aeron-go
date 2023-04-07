@@ -66,7 +66,7 @@ func (proxy *Proxy) ConnectRequest(correlationID int64, responseStream int32, re
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -81,7 +81,7 @@ func (proxy *Proxy) CloseSessionRequest() error {
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -97,7 +97,7 @@ func (proxy *Proxy) StartRecordingRequest(correlationID int64, stream int32, isL
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -112,7 +112,7 @@ func (proxy *Proxy) StopRecordingRequest(correlationID int64, stream int32, chan
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -128,7 +128,7 @@ func (proxy *Proxy) ReplayRequest(correlationID int64, recordingID int64, positi
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -143,7 +143,7 @@ func (proxy *Proxy) StopReplayRequest(correlationID int64, replaySessionID int64
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -159,7 +159,7 @@ func (proxy *Proxy) ListRecordingsRequest(correlationID int64, fromRecordingID i
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -176,7 +176,7 @@ func (proxy *Proxy) ListRecordingsForUriRequest(correlationID int64, fromRecordi
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -192,7 +192,7 @@ func (proxy *Proxy) ListRecordingRequest(correlationID int64, fromRecordingID in
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -208,7 +208,7 @@ func (proxy *Proxy) ExtendRecordingRequest(correlationID int64, recordingID int6
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -223,7 +223,7 @@ func (proxy *Proxy) RecordingPositionRequest(correlationID int64, recordingID in
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -238,7 +238,7 @@ func (proxy *Proxy) TruncateRecordingRequest(correlationID int64, recordingID in
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -253,7 +253,7 @@ func (proxy *Proxy) StopRecordingSubscriptionRequest(correlationID int64, subscr
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -268,7 +268,7 @@ func (proxy *Proxy) StopRecordingByIdentityRequest(correlationID int64, recordin
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -283,7 +283,7 @@ func (proxy *Proxy) StopPositionRequest(correlationID int64, recordingID int64) 
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -299,7 +299,7 @@ func (proxy *Proxy) FindLastMatchingRecordingRequest(correlationID int64, minRec
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -315,7 +315,7 @@ func (proxy *Proxy) ListRecordingSubscriptionsRequest(correlationID int64, pseud
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -331,7 +331,7 @@ func (proxy *Proxy) BoundedReplayRequest(correlationID int64, recordingID int64,
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -347,7 +347,7 @@ func (proxy *Proxy) StopAllReplaysRequest(correlationID int64, recordingID int64
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -363,7 +363,7 @@ func (proxy *Proxy) CatalogHeaderRequest(version int32, length int32, nextRecord
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -378,7 +378,7 @@ func (proxy *Proxy) ReplicateRequest(correlationID int64, srcRecordingID int64, 
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -393,7 +393,7 @@ func (proxy *Proxy) ReplicateRequest2(correlationID int64, srcRecordingID int64,
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -408,7 +408,7 @@ func (proxy *Proxy) StopReplicationRequest(correlationID int64, replicationID in
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -423,7 +423,7 @@ func (proxy *Proxy) StartPositionRequest(correlationID int64, recordingID int64)
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -438,7 +438,7 @@ func (proxy *Proxy) DetachSegmentsRequest(correlationID int64, recordingID int64
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -453,7 +453,7 @@ func (proxy *Proxy) DeleteDetachedSegmentsRequest(correlationID int64, recording
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -468,7 +468,7 @@ func (proxy *Proxy) PurgeSegmentsRequest(correlationID int64, recordingID int64,
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -483,7 +483,7 @@ func (proxy *Proxy) AttachSegmentsRequest(correlationID int64, recordingID int64
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -498,7 +498,7 @@ func (proxy *Proxy) MigrateSegmentsRequest(correlationID int64, srcRecordingID i
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -514,7 +514,7 @@ func (proxy *Proxy) AuthConnectRequest(correlationID int64, responseStream int32
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -529,7 +529,7 @@ func (proxy *Proxy) ChallengeResponse(correlationID int64, encodedCredentials []
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -544,7 +544,7 @@ func (proxy *Proxy) KeepAliveRequest(correlationID int64) error {
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -559,7 +559,7 @@ func (proxy *Proxy) TaggedReplicateRequest(correlationID int64, srcRecordingID i
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 
@@ -574,7 +574,7 @@ func (proxy *Proxy) PurgeRecordingRequest(correlationID int64, replaySessionID i
 		return err
 	}
 
-	if ret := proxy.Offer(atomic.MakeBuffer(bytes, len(bytes)), 0, int32(len(bytes)), nil); ret < 0 {
+	if ret := proxy.Offer(atomic.NewBufferSlice(bytes), 0, int32(len(bytes)), nil); ret < 0 {
 		return fmt.Errorf("Offer failed: %d", ret)
 	}
 

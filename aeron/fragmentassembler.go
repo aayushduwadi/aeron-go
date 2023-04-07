@@ -87,7 +87,7 @@ func (f *FragmentAssembler) OnFragment(
 				if (flags & endFrag) == endFrag {
 					msgLength := builder.Len()
 					f.delegate(
-						atomic.MakeBuffer(builder.Bytes(), msgLength),
+						atomic.NewBufferSlice(builder.Bytes()),
 						int32(0),
 						int32(msgLength),
 						header)

@@ -87,7 +87,7 @@ func (st *snapshotTaker) snapshotSession(session ClientSession) error {
 
 // Offer to our request publication
 func (st *snapshotTaker) offer(bytes []byte) int64 {
-	buffer := atomic.MakeBuffer(bytes)
+	buffer := atomic.NewBufferSlice(bytes)
 	length := int32(len(bytes))
 	start := time.Now()
 	var ret int64

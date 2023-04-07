@@ -28,7 +28,7 @@ func NewClusterMarkFile(filename string) (*ClusterMarkFile, error) {
 		return nil, err
 	}
 
-	b := atomic.MakeBuffer(f.GetMemoryPtr(), f.GetMemorySize())
+	b := atomic.NewBufferPointer(f.GetMemoryPtr(), int32(f.GetMemorySize()))
 
 	fly := &MarkFileHeaderFlyweight{}
 	fly.Wrap(b, 0)

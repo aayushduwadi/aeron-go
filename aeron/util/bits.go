@@ -18,6 +18,7 @@ package util
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 )
 
@@ -59,16 +60,11 @@ func NumberOfTrailingZeroes(value uint32) uint8 {
 
 // FastMod3 is HD recipe for faster division by 3 for 32 bit integers
 func FastMod3(value uint64) int32 {
-
-	table := [62]int32{0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
-		0, 1, 2, 0, 1, 2, 0, 1}
-
-	value = (value >> 16) + (value & 0xFFFF) // Max 0x1FFFE.
-	value = (value >> 8) + (value & 0x00FF)  // Max 0x2FD.
-	value = (value >> 4) + (value & 0x000F)  // Max 0x3D.
-	return table[value]
+	// Modern compilers will convert uint32(value) % 3 to something similar to below,
+	// but make it explicit to ensure it also works with older compilers
+	low := uint32(value)
+	div3 := uint32((uint64(low) * 0xAAAAAAAB) >> 33) // Multiply by ceil(2^33/3) and divide by 2^33
+	return int32(low - div3*3)
 }
 
 // IsPowerOfTwo checks that the argument number is a power of two
@@ -77,35 +73,19 @@ func IsPowerOfTwo(value int64) bool {
 }
 
 // Memcpy will copy length bytes from pointer src to dest
+//
 //go:nocheckptr
 func Memcpy(dest uintptr, src uintptr, length int32) {
-	var i int32
+	var destSlice, srcSlice reflect.SliceHeader
 
-	// batches of 8
-	i8 := length >> 3
-	for ; i < i8; i += 8 {
-		destPtr := unsafe.Pointer(dest + uintptr(i))
-		srcPtr := unsafe.Pointer(src + uintptr(i))
+	destSlice.Data = dest
+	destSlice.Len = int(length)
+	destSlice.Cap = int(length)
+	srcSlice.Data = src
+	srcSlice.Len = int(length)
+	srcSlice.Cap = int(length)
 
-		*(*uint64)(destPtr) = *(*uint64)(srcPtr)
-	}
-
-	// batches of 4
-	i4 := (length - i) >> 2
-	for ; i < i4; i += 4 {
-		destPtr := unsafe.Pointer(dest + uintptr(i))
-		srcPtr := unsafe.Pointer(src + uintptr(i))
-
-		*(*uint32)(destPtr) = *(*uint32)(srcPtr)
-	}
-
-	// remainder
-	for ; i < length; i++ {
-		destPtr := unsafe.Pointer(dest + uintptr(i))
-		srcPtr := unsafe.Pointer(src + uintptr(i))
-
-		*(*int8)(destPtr) = *(*int8)(srcPtr)
-	}
+	copy(*(*[]byte)(unsafe.Pointer(&destSlice)), *(*[]byte)(unsafe.Pointer(&srcSlice)))
 }
 
 func MemPrint(ptr uintptr, len int) string {

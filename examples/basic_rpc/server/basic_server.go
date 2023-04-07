@@ -109,7 +109,7 @@ func main() {
 		counter++
 
 		message := fmt.Sprintf("this is a message %d", counter)
-		srcBuffer := atomic.MakeBuffer(([]byte)(message))
+		srcBuffer := atomic.NewBufferSlice([]byte(message))
 		for _, c := range clients {
 			publication := c.pub
 			ret := publication.Offer(srcBuffer, 0, int32(len(message)), nil)

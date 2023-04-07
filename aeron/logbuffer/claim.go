@@ -44,14 +44,14 @@ func (claim *Claim) Buffer() *atomic.Buffer {
 //
 // @return offset in the buffer at which the range begins.
 func (claim *Claim) Offset() int32 {
-	return DataFrameHeader.Length
+	return DataFrameHeader_Length
 }
 
 // The length of the claimed range in the buffer.
 //
 // @return length of the range in the buffer.
 func (claim *Claim) Length() int32 {
-	return claim.buffer.Capacity() - DataFrameHeader.Length
+	return claim.buffer.Capacity() - DataFrameHeader_Length
 }
 
 // Get the value stored in the reserve space at the end of a data frame header.
@@ -61,7 +61,7 @@ func (claim *Claim) Length() int32 {
 // @return the value stored in the reserve space at the end of a data frame header.
 // @see DataHeaderFlyweight
 func (claim *Claim) ReservedValue() int64 {
-	return claim.buffer.GetInt64(DataFrameHeader.ReservedValueFieldOffset)
+	return claim.buffer.GetInt64(DataFrameHeader_ReservedValueFieldOffset)
 }
 
 // Write the provided value into the reserved space at the end of the data frame header.
@@ -72,7 +72,7 @@ func (claim *Claim) ReservedValue() int64 {
 // @return this for fluent API semantics.
 // @see DataHeaderFlyweight
 func (claim *Claim) SetReservedValue(value int64) *Claim {
-	claim.buffer.PutInt64(DataFrameHeader.ReservedValueFieldOffset, value)
+	claim.buffer.PutInt64(DataFrameHeader_ReservedValueFieldOffset, value)
 	return claim
 }
 
@@ -80,13 +80,13 @@ func (claim *Claim) SetReservedValue(value int64) *Claim {
 func (claim *Claim) Commit() {
 	frameLength := claim.buffer.Capacity()
 
-	claim.buffer.PutInt32Ordered(DataFrameHeader.FrameLengthFieldOffset, frameLength)
+	claim.buffer.PutInt32Ordered(DataFrameHeader_FrameLengthFieldOffset, frameLength)
 }
 
 // Abort a claim of the message space to the log buffer so that the log can progress by ignoring this claim.
 func (claim *Claim) Abort() {
 	frameLength := claim.buffer.Capacity()
 
-	claim.buffer.PutUInt16(DataFrameHeader.TypeFieldOffset, DataFrameHeader.TypePad)
-	claim.buffer.PutInt32Ordered(DataFrameHeader.FrameLengthFieldOffset, frameLength)
+	claim.buffer.PutUInt16(DataFrameHeader_TypeFieldOffset, DataFrameHeader_TypePad)
+	claim.buffer.PutInt32Ordered(DataFrameHeader_FrameLengthFieldOffset, frameLength)
 }

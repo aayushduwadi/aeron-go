@@ -19,6 +19,7 @@ package driver
 
 import (
 	"errors"
+
 	"github.com/lirm/aeron-go/aeron/atomic"
 	"github.com/lirm/aeron-go/aeron/command"
 	rb "github.com/lirm/aeron-go/aeron/ringbuffer"
@@ -332,7 +333,7 @@ func (driver *Proxy) RemoveRcvDestination(registrationID int64, channel string) 
 func (driver *Proxy) writeCommandToDriver(filler func(*atomic.Buffer, *int) int32) error {
 	messageBuffer := make([]byte, 512)
 
-	buffer := atomic.MakeBuffer(messageBuffer)
+	buffer := atomic.NewBufferSlice(messageBuffer)
 
 	length := len(messageBuffer)
 
